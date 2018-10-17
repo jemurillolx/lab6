@@ -1,121 +1,42 @@
-const express = require('express');
-const app = express();
+var createError = require('http-errors');
+var express = require('express'); 
+var path = require('path');
+var cookieParser = require('cookie-parser');
+var logger = require('morgan');
 
+var indexRouter = require('./routes/index');
+var indexAtletas = require('./routes/atletas');
 
-app.listen(3000);
+var app = express();
 
-console.log('Server Start.....');
-console.log('!!!!Listening on port 3000');
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'pug');
+
+app.use(logger('dev'));
 app.use(express.json());
-let atletas = [
-    { id: 1, nombre: 'Jorge', profesion: 'Estudiante', pais: 'Guatemala', edad: '20', correo: 'p1@gmail.com' },
-    { id: 2, nombre: 'Emilio', profesion: 'Estudiante', pais: 'Mexico', edad: '21', correo: 'p2@gmail.com' },
-    { id: 3,  nombre: 'Jose', profesion: 'Doctor', pais: 'Guatemala', edad: '25', correo: 'p3@gmail.com'  },
-    { id: 4, nombre: 'Miguel', profesion: 'Doctor', pais: 'Canada', edad: '28', correo: 'p4@gmail.com'  },
-    { id: 5, nombre: 'Martha', profesion: 'Doctor', pais: 'USA', edad: '27', correo: 'p5@gmail.com'  }
-];
-let varid = 5;
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use('/', indexRouter);
+app.use('/api/v1/lista', indexAtletas);
 
 
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+  next(createError(404));
+});
 
-/*insert*/
-app.post('/api/atletas', (req, res) => {
-    if (!req.body.nombre) {
-        res.status(400).send('Ingrese el nombre del atleta');
-        return;
-    }
-    if (!req.body.profesion) {
-        res.status(400).send('Ingrese la profesión del atleta');
-        return;
-    }
-    if (!req.body.pais) {
-        res.status(400).send('Ingrese el país del atleta');
-        return;
-    }
-    if (!req.body.edad) {
-        res.status(400).send('Ingrese la edad del atleta');
-        return;
-    }
-    if (!req.body.correo) {
-        res.status(400).send('Ingrese el correo del atleta');
-        return;
-    }
+// error handler
+app.use(function(err, req, res, next) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-    varid++;
-    const atlete =
-    {
-        id: varid,
-        nombre: req.body.nombre,
-        profesion: req.body.profesion,
-        pais: req.body.pais,
-        edad: req.body.edad,
-        correo: req.body.correo
-    };
-    atletas.push(atlete);
-    res.status(201).send(atletas);
-}
-);
-/*select all */
-app.get('/api/atletas', (req, res) => {
-    res.status(200).send(atletas);
-}
-);
-/*select one person */
-app.get('/api/atletas/:id', (req, res) => {
-    const atleta = atletas.find(j => j.id === parseInt(req.params.id));
-    if (!atleta) {
-        req.status(404).send('Not exist atlete.');
-        return;
-    }
-    res.status(200).send(atleta);
-}
-);
+  // render the error page
+  res.status(err.status || 500);
+  res.render('error');
+});
 
-
-app.put('/api/atletas/:id', (req, res) => {
-    const atleta = atletas.find(j => j.id === parseInt(req.params.id));
-    if (!atleta) {
-        req.status(404).send('Atlete not exist.');
-        return;
-    }
-    if (!req.body.nombre) {
-        res.status(400).send('Ingrese el nombre del atleta');
-        return;
-    }
-    if (!req.body.profesion) {
-        res.status(400).send('Ingrese la profesión del atleta');
-        return;
-    }
-    if (!req.body.pais) {
-        res.status(400).send('Ingrese el país del atleta');
-        return;
-    }
-    if (!req.body.edad) {
-        res.status(400).send('Ingrese la edad del atleta');
-        return;
-    }
-    if (!req.body.correo) {
-        res.status(400).send('Ingrese el correo del atleta');
-        return;
-    }
-
-    atleta.nombre = req.body.nombre;
-    atleta.profesion = req.body.profesion;
-    atleta.pais = req.body.pais;
-    atleta.edad = req.body.edad;
-    atleta.correo = req.body.correo;
-    res.status(204).send(atleta);
-}
-);
-
-app.delete('/api/atletas/:id', (req, res) => {
-    const atlete = atletas.find(j => j.id === parseInt(req.params.id));
-    if (!atlete) {
-        req.status(404).send('Atleta no encontrado.');
-        return;
-    }
-    const index = atletas.indexOf(atlete);
-    atletas.splice(index, 1);
-    res.status(204).send(atletas);
-}
-);
+module.exports = app;
